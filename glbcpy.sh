@@ -33,9 +33,12 @@ then
 	#make sure that the args are valid directories
 	if [ -d "$src" -a -d "$dst" ]
 	then
+		num_files=$(ls -p "$src" | grep -v / | wc -l)
+		cur_file=0
 		#iterate over the contents of the src directory
 		for src_filename in "$src"/*
 		do
+			echo -ne "$((cur_file * 100 / num_files))%\r"
 			#process only files
 			if [ -f "$src_filename" ]
 			then
@@ -47,10 +50,13 @@ then
 					dst_md5_output=$(md5sum -b "$dst_filename")
 					src_md5=${src_md5_output:0:32}
 					dst_md5=${dst_md5_output:0:32}
-					echo "$src_md5"
-					echo "$dst_md5"						
+					if [ "$src_md5" != "$dst_md5" -a ! -s "$dst_filename" ]
+					then
+						echo "$dst_filename"						
+					fi	
 				fi
 			fi 
+			cur_file=$((cur_file + 1))
 		done
 	else
 		echo "$src or $dst is not a valid directory"

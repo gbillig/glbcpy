@@ -34,14 +34,22 @@ then
 	if [ -d "$src" -a -d "$dst" ]
 	then
 		#iterate over the contents of the src directory
-		for filename in "$src"/*
+		for src_filename in "$src"/*
 		do
 			#process only files
-			if [ -f "$filename" ]
+			if [ -f "$src_filename" ]
 			then
 				#append filename to dst directory
-				echo "$dst"/"${filename##*/}"
-				#if [ -f "$dst"/"${
+				dst_filename="$dst"/"${src_filename##*/}"
+				if [ -f "$dst_filename" ]
+				then
+					src_md5_output=$(md5sum -b "$src_filename")
+					dst_md5_output=$(md5sum -b "$dst_filename")
+					src_md5=${src_md5_output:0:32}
+					dst_md5=${dst_md5_output:0:32}
+					echo "$src_md5"
+					echo "$dst_md5"						
+				fi
 			fi 
 		done
 	else

@@ -36,24 +36,41 @@ then
 		num_files=$(ls -p "$src" | grep -v / | wc -l)
 		cur_file=0
 		#iterate over the contents of the src directory
-		for src_filename in "$src"/*
+		for src_file in "$src"/*
 		do
 			echo -ne "$((cur_file * 100 / num_files))%\r"
 			#process only files
-			if [ -f "$src_filename" ]
+			if [ -f "$src_file" ]
 			then
+				src_md5_output=$(md5sum -b "$src_file")
+				src_md5=${src_md5_output:0:32}
+
 				#append filename to dst directory
-				dst_filename="$dst"/"${src_filename##*/}"
-				if [ -f "$dst_filename" ]
+				dst_file="$dst"/"${src_file##*/}"
+				if [ -f "$dst_file" ]
 				then
-					src_md5_output=$(md5sum -b "$src_filename")
-					dst_md5_output=$(md5sum -b "$dst_filename")
-					src_md5=${src_md5_output:0:32}
+					dst_md5_output=$(md5sum -b "$dst_file")
 					dst_md5=${dst_md5_output:0:32}
-					if [ "$src_md5" != "$dst_md5" -a ! -s "$dst_filename" ]
+
+					if [ ! -s "$dst_file" ]
 					then
-						echo "$dst_filename"						
-					fi	
+						rm "$dst_file"
+					else
+						if [ "$src_md5" != "$dst_md5"]
+						then
+							echo "$dst_file"					
+						fi	
+					fi
+				else
+					echo "cp $src_file $dst/"
+					#cp "$src_file" "$dst"/
+
+					new_dst_md5_output=$(md5sum -b "$dst_file")
+					new_dst_md5=${new_dst_md5_output:0:32}
+					if [ "$src_md5" != "$new_dst_md5"]
+					then
+						echo "$dst_file"					
+					fi
 				fi
 			fi 
 			cur_file=$((cur_file + 1))

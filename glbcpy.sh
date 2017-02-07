@@ -30,6 +30,15 @@ then
 		dst=$4
 	fi
 
+	message="Are you sure you want to copy from "$src" to "$dst" ? (Y/n)"
+	echo $message
+	read -p "" -n 1 -r
+	echo    # (optional) move to a new line
+	if [[ ! $REPLY =~ ^[Yy]$ ]]
+	then
+		[[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
+	fi
+
 	#make sure that the args are valid directories
 	if [ -d "$src" -a -d "$dst" ]
 	then
@@ -51,27 +60,36 @@ then
 				then
 					dst_md5_output=$(md5sum -b "$dst_file")
 					dst_md5=${dst_md5_output:0:32}
-
+					
+					#if dst file is empty
 					if [ ! -s "$dst_file" ]
 					then
-						rm "$dst_file"
+						rm -i "$dst_file"
 					else
-						if [ "$src_md5" != "$dst_md5"]
+						#if the dst md5 doesn't match src md5
+						if [ "$src_md5" != "$dst_md5" ]
 						then
-							echo "$dst_file"					
+							echo "$dst_file"
+							#skip this file
+							continue			
 						fi	
 					fi
-				else
-					echo "cp $src_file $dst/"
-					#cp "$src_file" "$dst"/
+				fi
 
+				cp_attempts=3
+				while [ $cp_attempts -gt 0 ]
+				do
+					rm -i "$dst_file"
+					cp "$src_file" "$dst"/
 					new_dst_md5_output=$(md5sum -b "$dst_file")
 					new_dst_md5=${new_dst_md5_output:0:32}
-					if [ "$src_md5" != "$new_dst_md5"]
+					if [ "$src_md5" == "$new_dst_md5"]
 					then
-						echo "$dst_file"					
+						let cp_attempts=0
+					else
+						let cp_attempts-=1
 					fi
-				fi
+				done
 			fi 
 			cur_file=$((cur_file + 1))
 		done

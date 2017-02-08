@@ -26,4 +26,7 @@ if (conf != "Y" and conf != "y"):
 	sys.exit(1)
 
 print 'OK Copying!'
+num_files=len([name for name in os.listdir(src) if os.path.isfile(os.path.join(src, name))])
+
+
 
